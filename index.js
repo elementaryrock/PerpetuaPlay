@@ -233,15 +233,24 @@ client.on("ready", async () => {
 
   // Set bot avatar from logo if it hasn't been set
   try {
-    const logoPath = path.join(__dirname, "logo", "logo.png");
+    const logoPath = "logo/logo.png";
     if (fs.existsSync(logoPath)) {
+      log("Logo file found, checking if avatar needs update", "INFO");
       const currentAvatar = client.user.displayAvatarURL();
-      if (currentAvatar.includes("embed/avatars")) {
+      if (
+        currentAvatar.includes("embed/avatars") ||
+        currentAvatar.includes("cdn.discordapp.com/embed/avatars")
+      ) {
         // Only update if using default Discord avatar
+        log("Using default avatar, updating with logo", "INFO");
         const avatar = fs.readFileSync(logoPath);
         await client.user.setAvatar(avatar);
         log("Bot avatar updated with logo", "INFO");
+      } else {
+        log("Custom avatar already set, skipping update", "INFO");
       }
+    } else {
+      log("Logo file not found at " + logoPath, "WARN");
     }
   } catch (error) {
     log(`Failed to set bot avatar: ${error.message}`, "WARN");
@@ -304,12 +313,38 @@ client.on("messageCreate", async (msg) => {
     const url = playlist[currentIndex];
     try {
       const info = await playdl.video_info(url);
-      msg.reply(
-        `🎵 Now playing: **${info.video_details.title}**\n📊 Song ${
-          currentIndex + 1
-        }/${playlist.length}\n🔗 ${url}`
-      );
-    } catch {
+      const nowPlayingEmbed = new EmbedBuilder()
+        .setColor(0x00ff00)
+        .setTitle("🎵 Now Playing")
+        .setDescription(`**${info.video_details.title}**`)
+        .addFields(
+          {
+            name: "📊 Progress",
+            value: `Song ${currentIndex + 1} of ${playlist.length}`,
+            inline: true,
+          },
+          {
+            name: "🔗 URL",
+            value: url.length > 50 ? `[Click here](${url})` : url,
+            inline: false,
+          }
+        )
+        .setFooter({
+          text: "PerpetuaPlay • Made by elementaryrock(Maanas M S)",
+        })
+        .setTimestamp();
+
+      // Try to add logo
+      const logoPath = "logo/logo.png";
+      if (fs.existsSync(logoPath)) {
+        const logoAttachment = { attachment: logoPath, name: "logo.png" };
+        nowPlayingEmbed.setThumbnail("attachment://logo.png");
+        msg.reply({ embeds: [nowPlayingEmbed], files: [logoAttachment] });
+      } else {
+        msg.reply({ embeds: [nowPlayingEmbed] });
+      }
+    } catch (error) {
+      log(`Failed to get video info: ${error.message}`, "WARN");
       msg.reply(
         `🎵 Now playing: ${url}\n📊 Song ${currentIndex + 1}/${playlist.length}`
       );
@@ -371,12 +406,14 @@ client.on("messageCreate", async (msg) => {
       .setTimestamp();
 
     try {
-      const logoPath = path.join(__dirname, "logo", "logo.png");
+      const logoPath = "logo/logo.png";
       if (fs.existsSync(logoPath)) {
+        log("Sending help embed with logo", "INFO");
         const logoAttachment = { attachment: logoPath, name: "logo.png" };
         helpEmbed.setThumbnail("attachment://logo.png");
         msg.reply({ embeds: [helpEmbed], files: [logoAttachment] });
       } else {
+        log("Logo file not found, sending help embed without logo", "WARN");
         msg.reply({ embeds: [helpEmbed] });
       }
     } catch (error) {
