@@ -1,0 +1,50 @@
+{
+  "name": "discord-music-bot-24-7",
+  "version": "1.0.0",
+  "description": "A 24/7 Discord music bot with custom logo that continuously loops through a playlist with robust error handling and reconnection capabilities",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "config:validate": "node scripts/validate-config.js",
+    "test:token": "node scripts/test-token.js",
+    "test:playlist": "node scripts/test-playlist.js",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop discord-music-bot",
+    "pm2:restart": "pm2 restart discord-music-bot",
+    "pm2:logs": "pm2 logs discord-music-bot",
+    "pm2:monit": "pm2 monit"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "music",
+    "24/7",
+    "youtube",
+    "voice",
+    "azure"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "@discordjs/voice": "^0.16.1",
+    "play-dl": "^1.9.7",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.11.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "your-repository-url"
+  },
+  "bugs": {
+    "url": "your-repository-url/issues"
+  },
+  "homepage": "your-repository-url#readme"
+}
