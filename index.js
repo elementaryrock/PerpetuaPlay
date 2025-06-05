@@ -229,6 +229,7 @@ function setupVoiceConnection(guild) {
 client.on("ready", async () => {
   log(`Bot logged in as ${client.user.tag}`);
   log(`Ready to serve ${client.guilds.cache.size} guilds`);
+  log("PerpetuaPlay Discord Music Bot - Made by elementaryrock(Maanas M S)");
 
   // Set bot avatar from logo if it hasn't been set
   try {
@@ -339,9 +340,9 @@ client.on("messageCreate", async (msg) => {
   } else if (content === "!help") {
     const helpEmbed = new EmbedBuilder()
       .setColor(0x0099ff)
-      .setTitle("🎵 Discord 24/7 Music Bot")
+      .setTitle("🎵 PerpetuaPlay")
       .setDescription(
-        "A bot that plays your playlist continuously in voice channels!"
+        "A bot that plays your playlist continuously in voice channels!\n\n**Made by elementaryrock(Maanas M S)**\n🔗 https://github.com/elementaryrock/PerpetuaPlay.git"
       )
       .addFields(
         {
@@ -364,7 +365,9 @@ client.on("messageCreate", async (msg) => {
           inline: false,
         }
       )
-      .setFooter({ text: "Made for 24/7 music streaming" })
+      .setFooter({
+        text: "Made by elementaryrock(Maanas M S) • 24/7 music streaming",
+      })
       .setTimestamp();
 
     try {
@@ -380,7 +383,9 @@ client.on("messageCreate", async (msg) => {
       log(`Failed to send help embed: ${error.message}`, "WARN");
       // Fallback to simple text message
       const helpMessage = `
-🎵 **Discord Music Bot Commands**
+🎵 **PerpetuaPlay**
+**Made by elementaryrock(Maanas M S)**
+🔗 https://github.com/elementaryrock/PerpetuaPlay.git
 
 \`!play\` - Start playing the playlist
 \`!stop\` - Stop playback and leave channel
