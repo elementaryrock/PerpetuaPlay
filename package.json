@@ -27,10 +27,11 @@
   "author": "elementaryrock(Maanas M S)",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^14.14.1",
     "@discordjs/voice": "^0.16.1",
-    "play-dl": "^1.9.7",
-    "dotenv": "^16.3.1"
+    "@distube/ytdl-core": "^4.16.11",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "play-dl": "^1.9.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

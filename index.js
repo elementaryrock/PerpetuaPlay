@@ -18,7 +18,7 @@ const {
   getVoiceConnection,
   entersState,
 } = require("@discordjs/voice");
-const playdl = require("play-dl");
+const ytdl = require("@distube/ytdl-core");
 const path = require("path");
 const fs = require("fs");
 
@@ -76,34 +76,46 @@ function log(message, level = "INFO") {
 async function playSong(guild) {
   if (!playlist.length) return;
   const url = playlist[currentIndex];
-  let stream, info;
 
   log(`Attempting to play: ${url}`);
 
   try {
-    info = await playdl.video_info(url);
-    stream = await playdl.stream(url, { quality: 2 });
+    // Validate URL first
+    if (!ytdl.validateURL(url)) {
+      throw new Error("Invalid YouTube URL");
+    }
+
+    // Get video info
+    const info = await ytdl.getInfo(url);
+    const title = info.videoDetails.title;
+
+    // Create stream with better options for Azure VMs
+    const stream = ytdl(url, {
+      filter: "audioonly",
+      quality: "highestaudio",
+      highWaterMark: 1 << 25, // 32MB buffer
+      requestOptions: {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      },
+    });
+
+    const resource = createAudioResource(stream, {
+      inputType: "arbitrary",
+    });
+
+    audioPlayer.play(resource);
+    isPlaying = true;
+
+    log(`Now playing: ${title}`);
+    textChannel?.send(`🎵 Now playing: **${title}**\n${url}`);
   } catch (e) {
     log(`Error fetching stream for ${url}: ${e.message}`, "ERROR");
     textChannel?.send(`❌ Failed to play: ${url}\nSkipping to next song...`);
     skipSong(guild, true);
     return;
-  }
-
-  try {
-    const resource = createAudioResource(stream.stream, {
-      inputType: stream.type,
-    });
-    audioPlayer.play(resource);
-    isPlaying = true;
-
-    log(`Now playing: ${info.video_details.title}`);
-    textChannel?.send(
-      `🎵 Now playing: **${info.video_details.title}**\n${url}`
-    );
-  } catch (e) {
-    log(`Error playing audio resource: ${e.message}`, "ERROR");
-    skipSong(guild, true);
   }
 }
 

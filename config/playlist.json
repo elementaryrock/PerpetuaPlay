@@ -1,43 +1,8 @@
-{
-    "name": "24/7 Chill Music Playlist",
-    "description": "Continuous background music for 24/7 playback",
-    "songs": [
-        {
-            "title": "Lofi Hip Hop Mix",
-            "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
-            "duration": "11:55:00"
-        },
-        {
-            "title": "Peaceful Piano Music",
-            "url": "https://www.youtube.com/watch?v=1ZYbU82GVz4",
-            "duration": "3:00:00"
-        },
-        {
-            "title": "Ambient Study Music",
-            "url": "https://www.youtube.com/watch?v=5qap5aO4i9A",
-            "duration": "8:00:00"
-        },
-        {
-            "title": "Relaxing Guitar Music",
-            "url": "https://www.youtube.com/watch?v=4L_yCwFD6Jo",
-            "duration": "2:30:00"
-        },
-        {
-            "title": "Nature Sounds - Rain",
-            "url": "https://www.youtube.com/watch?v=mPZkdNFkNps",
-            "duration": "10:00:00"
-        }
-    ],
-    "settings": {
-        "shuffle": false,
-        "volume": 0.5,
-        "loop": true,
-        "autostart": false
-    },
-    "metadata": {
-        "created": "2025-06-05",
-        "version": "1.0",
-        "total_songs": 5,
-        "estimated_duration": "35+ hours"
-    }
-}
+[
+  "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+  "https://www.youtube.com/watch?v=1ZYbU82GVz4",
+  "https://www.youtube.com/watch?v=5qap5aO4i9A",
+  "https://www.youtube.com/watch?v=4L_yCwFD6Jo",
+  "https://www.youtube.com/watch?v=mPZkdNFkNps",
+  "https://www.youtube.com/watch?v=22ywST8BvBg"
+]

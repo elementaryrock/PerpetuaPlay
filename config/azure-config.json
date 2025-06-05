@@ -1,0 +1,31 @@
+{
+  "network": {
+    "dns": [
+      "8.8.8.8",
+      "1.1.1.1"
+    ],
+    "timeout": 30000,
+    "retries": 3
+  },
+  "audio": {
+    "bufferSize": 33554432,
+    "highWaterMark": 33554432,
+    "requestOptions": {
+      "headers": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
+      }
+    }
+  },
+  "tips": [
+    "Use residential proxy if issues persist",
+    "Consider rotating User-Agent strings",
+    "Monitor Azure VM IP reputation",
+    "Set up DNS over HTTPS if needed"
+  ]
+}
