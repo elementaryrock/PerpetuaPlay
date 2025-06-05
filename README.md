@@ -23,6 +23,38 @@ A resource-efficient Discord bot that plays a looping playlist 24/7 in a voice c
 
 ## Setup & Running Instructions
 
+### Prerequisites (Ubuntu/Debian Server)
+
+Before installing the bot, your Ubuntu server needs these system dependencies:
+
+```bash
+# Update package list
+sudo apt update
+
+# Install build tools and development packages
+sudo apt install -y build-essential python3-dev nodejs npm
+
+# Install libsodium development libraries
+sudo apt install -y libsodium-dev
+
+# Install additional build dependencies
+sudo apt install -y libtool pkg-config autoconf automake
+
+# Install git if not already installed
+sudo apt install -y git
+
+# Install additional tools that might be needed
+sudo apt install -y cmake make gcc g++
+```
+
+**Why these are needed:**
+
+- `build-essential` - Essential compilation tools (gcc, make, etc.)
+- `libsodium-dev` - Required for Discord voice encryption (sodium package)
+- `python3-dev` - Needed for building native Node.js modules
+- `nodejs npm` - Node.js runtime and package manager
+- Build tools - Required for compiling native dependencies
+
 ### 1. Clone the Repository
 
 ```bash
