@@ -1,5 +1,5 @@
 // Test playlist URLs for accessibility
-const playdl = require("play-dl");
+const ytdl = require("@distube/ytdl-core");
 const fs = require("fs");
 const path = require("path");
 
@@ -26,9 +26,13 @@ async function testPlaylist() {
     console.log(`Testing ${i + 1}/${playlist.length}: ${url}`);
 
     try {
-      const info = await playdl.video_info(url);
+      if (!ytdl.validateURL(url)) {
+        throw new Error("Invalid YouTube URL");
+      }
+
+      const info = await ytdl.getInfo(url);
       console.log(
-        `✅ ${info.video_details.title} - Duration: ${info.video_details.durationRaw}`
+        `✅ ${info.videoDetails.title} - Duration: ${info.videoDetails.lengthSeconds}s`
       );
     } catch (error) {
       console.log(`❌ Failed: ${error.message}`);

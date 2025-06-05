@@ -2,6 +2,29 @@
 // Core logic for connecting to Discord, handling commands, and playing music
 
 require("dotenv").config();
+
+// Import encryption package first
+let sodium;
+try {
+  sodium = require("sodium");
+  console.log("✅ Using sodium for voice encryption");
+} catch (e) {
+  console.warn("⚠️ sodium not found, trying other encryption packages");
+  try {
+    sodium = require("libsodium-wrappers");
+    console.log("✅ Using libsodium-wrappers for voice encryption");
+  } catch (e) {
+    try {
+      sodium = require("tweetnacl");
+      console.log("✅ Using tweetnacl for voice encryption");
+    } catch (e) {
+      console.error(
+        "❌ No encryption package found! Install sodium, libsodium-wrappers, or tweetnacl"
+      );
+    }
+  }
+}
+
 const {
   Client,
   GatewayIntentBits,
@@ -113,7 +136,20 @@ async function playSong(guild) {
     textChannel?.send(`🎵 Now playing: **${title}**\n${url}`);
   } catch (e) {
     log(`Error fetching stream for ${url}: ${e.message}`, "ERROR");
-    textChannel?.send(`❌ Failed to play: ${url}\nSkipping to next song...`);
+
+    // Handle different types of errors
+    if (e.message.includes("We're processing this video")) {
+      textChannel?.send(
+        `⏳ Video is being processed by YouTube, skipping: ${url}`
+      );
+    } else if (e.message.includes("Sign in to confirm")) {
+      textChannel?.send(
+        `🤖 Bot detection error, skipping: ${url}\n💡 Consider setting up YouTube cookies`
+      );
+    } else {
+      textChannel?.send(`❌ Failed to play: ${url}\nSkipping to next song...`);
+    }
+
     skipSong(guild, true);
     return;
   }
@@ -324,11 +360,11 @@ client.on("messageCreate", async (msg) => {
     }
     const url = playlist[currentIndex];
     try {
-      const info = await playdl.video_info(url);
+      const info = await ytdl.getInfo(url);
       const nowPlayingEmbed = new EmbedBuilder()
         .setColor(0x00ff00)
         .setTitle("🎵 Now Playing")
-        .setDescription(`**${info.video_details.title}**`)
+        .setDescription(`**${info.videoDetails.title}**`)
         .addFields(
           {
             name: "📊 Progress",
