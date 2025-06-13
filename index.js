@@ -2,6 +2,7 @@
 // Core logic for connecting to Discord, handling commands, and playing music
 
 require("dotenv").config();
+const readline = require("readline");
 
 // Import encryption package first
 let sodium;
@@ -57,18 +58,13 @@ if (fs.existsSync(playlistPath)) {
   }
 }
 
-if (!playlist.length) {
-  console.error("No playlist found! Please add songs to config/playlist.json");
-  process.exit(1);
-}
+// Skip playlist validation during initial load - will be checked after menu selection
 
 const TOKEN = config.token || process.env.DISCORD_TOKEN;
 if (!TOKEN) {
   console.error("Bot token not set! See docs/config_guide.md");
   process.exit(1);
 }
-
-console.log(`Loaded ${playlist.length} songs in playlist`);
 
 const client = new Client({
   intents: [
@@ -89,6 +85,7 @@ let voiceChannel = null;
 let connection = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
+let playbackMode = "youtube"; // "youtube" or "local"
 
 // Logging helper
 function log(message, level = "INFO") {
@@ -96,7 +93,65 @@ function log(message, level = "INFO") {
   console.log(`[${timestamp}] [${level}] ${message}`);
 }
 
+// Display startup menu and get user choice
+function displayStartupMenu() {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    console.log("\n" + "=".repeat(50));
+    console.log("🎵 PerpetuaPlay Discord Music Bot");
+    console.log("=".repeat(50));
+    console.log("Choose playback mode:");
+    console.log("1. Play from YouTube playlist");
+    console.log("2. Play local MP3 file (local/song.mp3)");
+    console.log("=".repeat(50));
+
+    rl.question("Enter your choice (1 or 2): ", (answer) => {
+      rl.close();
+
+      if (answer === "1") {
+        playbackMode = "youtube";
+        console.log("✅ Selected: YouTube playlist mode");
+
+        // Validate playlist for YouTube mode
+        if (!playlist.length) {
+          console.error(
+            "❌ No playlist found! Please add songs to config/playlist.json"
+          );
+          process.exit(1);
+        }
+        console.log(`✅ Loaded ${playlist.length} songs in playlist`);
+        resolve();
+      } else if (answer === "2") {
+        playbackMode = "local";
+        console.log("✅ Selected: Local MP3 file mode");
+        // Check if local MP3 file exists
+        const localMp3Path = path.join(__dirname, "local", "song.mp3");
+        if (!fs.existsSync(localMp3Path)) {
+          console.error("❌ Local MP3 file not found at: local/song.mp3");
+          console.log("Please place an MP3 file at local/song.mp3 and restart");
+          process.exit(1);
+        }
+        console.log("✅ Found local MP3 file: local/song.mp3");
+        resolve();
+      } else {
+        console.log(
+          "❌ Invalid choice. Please run the bot again and select 1 or 2."
+        );
+        process.exit(1);
+      }
+    });
+  });
+}
+
 async function playSong(guild) {
+  if (playbackMode === "local") {
+    return playLocalMp3(guild);
+  }
+
   if (!playlist.length) return;
   const url = playlist[currentIndex];
 
@@ -155,7 +210,44 @@ async function playSong(guild) {
   }
 }
 
+async function playLocalMp3(guild) {
+  const localMp3Path = path.join(__dirname, "local", "song.mp3");
+
+  log(`Playing local MP3: ${localMp3Path}`);
+
+  try {
+    // Check if file exists
+    if (!fs.existsSync(localMp3Path)) {
+      throw new Error("Local MP3 file not found");
+    }
+
+    // Create audio resource from local file
+    const resource = createAudioResource(localMp3Path, {
+      inputType: "arbitrary",
+    });
+
+    audioPlayer.play(resource);
+    isPlaying = true;
+
+    log(`Now playing local MP3: song.mp3`);
+    textChannel?.send(`🎵 Now playing local file: **song.mp3**`);
+  } catch (e) {
+    log(`Error playing local MP3: ${e.message}`, "ERROR");
+    textChannel?.send(`❌ Failed to play local MP3: ${e.message}`);
+  }
+}
+
 function skipSong(guild, auto = false) {
+  if (playbackMode === "local") {
+    // For local mode, just restart the same song
+    if (!auto) {
+      log("Restarting local MP3");
+      textChannel?.send("🔄 Restarting local MP3...");
+    }
+    setTimeout(() => playSong(guild), auto ? 2000 : 500);
+    return;
+  }
+
   if (!playlist.length) return;
   currentIndex = (currentIndex + 1) % playlist.length;
 
@@ -194,8 +286,13 @@ function setupAudioPlayer(guild) {
 
   audioPlayer.on(AudioPlayerStatus.Idle, () => {
     if (isPlaying) {
-      log("Song finished, playing next song");
-      skipSong(guild, true);
+      if (playbackMode === "local") {
+        log("Local MP3 finished, restarting...");
+        setTimeout(() => playSong(guild), 1000); // Restart local MP3 after 1 second
+      } else {
+        log("Song finished, playing next song");
+        skipSong(guild, true);
+      }
     }
   });
 
@@ -421,6 +518,10 @@ client.on("messageCreate", async (msg) => {
     stopPlayback(guild);
     msg.reply("👋 Left the voice channel.");
   } else if (content === "!help") {
+    const modeStatus =
+      playbackMode === "youtube"
+        ? `YouTube Playlist (${playlist.length} songs)`
+        : "Local MP3 File";
     const helpEmbed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle("🎵 PerpetuaPlay")
@@ -442,7 +543,7 @@ client.on("messageCreate", async (msg) => {
         },
         {
           name: "📊 Status",
-          value: `Playlist: ${playlist.length} songs\nCurrently: ${
+          value: `Mode: ${modeStatus}\nCurrently: ${
             isPlaying ? "Playing" : "Stopped"
           }`,
           inline: false,
@@ -467,20 +568,26 @@ client.on("messageCreate", async (msg) => {
     } catch (error) {
       log(`Failed to send help embed: ${error.message}`, "WARN");
       // Fallback to simple text message
+      const modeStatus =
+        playbackMode === "youtube"
+          ? `YouTube playlist (${playlist.length} songs)`
+          : "Local MP3 file";
+      const skipText =
+        playbackMode === "local" ? "Restart current song" : "Skip to next song";
       const helpMessage = `
 🎵 **PerpetuaPlay**
 **Made by elementaryrock(Maanas M S)**
 🔗 https://github.com/elementaryrock/PerpetuaPlay.git
 
-\`!play\` - Start playing the playlist
+\`!play\` - Start playing
 \`!stop\` - Stop playback and leave channel
-\`!skip\` - Skip to next song
+\`!skip\` - ${skipText}
 \`!nowplaying\` or \`!np\` - Show current song
 \`!join\` - Join your voice channel
 \`!leave\` - Leave voice channel
 \`!help\` - Show this help message
 
-📝 Playlist has ${playlist.length} songs loaded.
+📝 Mode: ${modeStatus}
       `;
       msg.reply(helpMessage);
     }
@@ -540,4 +647,12 @@ process.on("SIGTERM", () => {
 });
 
 log("Starting Discord Music Bot...", "INFO");
-client.login(TOKEN);
+
+// Display startup menu and wait for user choice
+async function startBot() {
+  await displayStartupMenu();
+  client.login(TOKEN);
+}
+
+// Start the bot with menu
+startBot();
